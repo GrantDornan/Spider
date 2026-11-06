@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spider Solitaire</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a5c2a;
+    background-image: radial-gradient(ellipse at center, #2a7a3a 0%, #1a5c2a 70%, #0f3d1a 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    overflow-x: hidden;
+  }
+
+  header {
+    width: 100%;
+    max-width: 860px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  header h1 {
+    color: #fff;
+    font-size: 1.4rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 1px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 16px;
+    color: #c8e6c9;
+    font-size: 0.85rem;
+  }
+
+  .stats span { font-weight: 600; color: #fff; }
+
+  .btn {
+    background: linear-gradient(135deg, #f9a825, #f57f17);
+    border: none;
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 12px rgba(0,0,0,0.4); }
+  .btn:active { transform: translateY(0); }
+
+  .top-area {
+    width: 100%;
+    max-width: 860px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 16px 10px;
+  }
+
+  .stock-area {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    position: relative;
+    min-width: 80px;
+    min-height: 50px;
+  }
+
+  .stock-pile {
+    width: 56px;
+    height: 76px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #1565c0, #0d47a1);
+    border: 2px solid #42a5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.15s;
+  }
+  .stock-pile:hover { transform: scale(1.05); }
+  .stock-pile.empty {
+    background: transparent;
+    border: 2px dashed rgba(255,255,255,0.25);
+    box-shadow: none;
+  }
+  .stock-label {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.7rem;
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .foundations {
+    display: flex;
+    gap: 4px;
+  }
+
+  .foundation-slot {
+    width: 44px;
+    height: 60px;
+    border-radius: 5px;
+    border: 2px dashed rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.3);
+  }
+  .foundation-slot.filled {
+    border: 2px solid #f9a825;
+    background: rgba(249,168,37,0.15);
+    color: #f9a825;
+  }
+
+  .board {
+    width: 100%;
+    max-width: 860px;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px 30px;
+  }
+
+  .column {
+    width: 72px;
+    min-height: 400px;
+    position: relative;
+  }
+
+  .col-placeholder {
+    width: 100%;
+    height: 96px;
+    border-radius: 6px;
+    border: 2px dashed rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.03);
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .card {
+    width: 66px;
+    height: 92px;
+    border-radius: 6px;
+    position: absolute;
+    left: 3px;
+    cursor: pointer;
+    transition: top 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  .card .card-face {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    background: #fff;
+    border: 1.5px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4px 5px;
+    font-family: Georgia, 'Times New Roman', serif;
+    position: relative;
+  }
+
+  .card .card-face .rank {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .card .card-face .suit-center {
+    font-size: 1.8rem;
+    text-align: center;
+    line-height: 1;
+  }
+  .card .card-face .rank-bottom {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    transform: rotate(180deg);
+  }
+
+  .card.red .card-face .rank,
+  .card.red .card-face .suit-center,
+  .card.red .card-face .rank-bottom { color: #c62828; }
+
+  .card.black .card-face .rank,
+  .card.black .card-face .suit-center,
+  .card.black .card-face .rank-bottom { color: #212121; }
+
+  .card .card-back {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #1565c0, #0d47a1);
+    border: 1.5px solid #42a5f5;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .card .card-back::after {
+    content: '✦';
+    color: rgba(255,255,255,0.3);
+    font-size: 1.6rem;
+  }
+
+  .card.face-down .card-face { display: none; }
+  .card.face-down .card-back { display: flex; }
+  .card.face-up .card-face { display: flex; }
+  .card.face-up .card-back { display: none; }
+
+  .card.selected .card-face {
+    border: 2.5px solid #f9a825;
+    box-shadow: 0 0 12px rgba(249,168,37,0.5), 0 2px 6px rgba(0,0,0,0.3);
+    background: #fffde7;
+  }
+
+  .card.invalid-shake {
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  .card.completing {
+    animation: completeAnim 0.5s ease forwards;
+  }
+  @keyframes completeAnim {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.8; }
+    100% { transform: scale(0.3) translateY(-60px); opacity: 0; }
+  }
+
+  .game-over-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .game-over-box {
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    border-radius: 16px;
+    padding: 40px 50px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .game-over-box h2 { font-size: 2rem; margin-bottom: 10px; }
+  .game-over-box p { margin-bottom: 20px; opacity: 0.85; }
+
+  .msg {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .msg.show { opacity: 1; }
+
+  @media (max-width: 820px) {
+    .card { width: 52px; height: 72px; }
+    .card .card-face .rank { font-size: 0.8rem; }
+    .card .card-face .suit-center { font-size: 1.3rem; }
+    .card .card-face .rank-bottom { font-size: 0.8rem; }
+    .column { width: 56px; }
+    .board { gap: 3px; padding: 10px 4px 30px; }
+    .card { left: 2px; }
+    .foundation-slot { width: 36px; height: 50px; font-size: 0.9rem; }
+    .stock-pile { width: 44px; height: 60px; }
+    header h1 { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🕷️ Spider Solitaire</h1>
+  <div class="stats">
+    <div>Moves: <span id="move-count">0</span></div>
+    <div>Score: <span id="score">500</span></div>
+    <div>Deals: <span id="deals-left">5</span></div>
+  </div>
+  <button class="btn" id="btn-new" onclick="newGame()">New Game</button>
+  <button class="btn" id="btn-undo" onclick="undo()">↩ Undo</button>
+</header>
+
+<div class="top-area">
+  <div class="stock-area" id="stock-area" onclick="dealFromStock()">
+    <div class="stock-pile" id="stock-pile"></div>
+    <span class="stock-label">Click to deal</span>
+  </div>
+  <div class="foundations" id="foundations"></div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="msg" id="msg"></div>
+
+<script>
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SUITS = ['♠','♥'];
+const NUM_SUITS = 2; // 2-suit spider (spades & hearts)
+const NUM_COPIES = 4; // 4 copies of each suit → 104 cards
+
+let columns, stock, foundations, selectedCol, selectedIdx, score, moves, undoStack, dealsLeft, gameOver;
+
+function createDeck() {
+  let deck = [];
+  let id = 0;
+  for (let s = 0; s < NUM_SUITS; s++) {
+    for (let c = 0; c < NUM_COPIES; c++) {
+      for (let r = 0; r < 13; r++) {
+        deck.push({
+          rank: RANKS[r],
+          value: r + 1,
+          suit: SUITS[s],
+          color: s === 0 ? 'black' : 'red',
+          faceUp: false,
+          id: id++
+        });
+      }
+    }
+  }
+  return deck;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function saveState() {
+  undoStack.push({
+    columns: deepClone(columns),
+    stock: deepClone(stock),
+    foundations: deepClone(foundations),
+    score, moves, dealsLeft
+  });
+  if (undoStack.length > 200) undoStack.shift();
+}
+
+function newGame() {
+  let deck = shuffle(createDeck());
+  columns = Array.from({length: 10}, () => []);
+  foundations = [];
+  stock = [];
+  selectedCol = -1;
+  selectedIdx = -1;
+  score = 500;
+  moves = 0;
+  dealsLeft = 5;
+  undoStack = [];
+  gameOver = false;
+
+  // Deal: first 4 columns get 6, next 6 get 5
+  for (let i = 0; i < 10; i++) {
+    const count = i < 4 ? 6 : 5;
+    for (let j = 0; j < count; j++) {
+      columns[i].push(deck.pop());
+    }
+  }
+  // Last card of each column is face-up
+  for (let i = 0; i < 10; i++) {
+    if (columns[i].length > 0) {
+      columns[i][columns[i].length - 1].faceUp = true;
+    }
+  }
+  // Remaining 50 cards → stock
+  stock = deck;
+
+  removeOverlay();
+  render();
+}
+
+function render() {
+  // Board
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  for (let c = 0; c < 10; c++) {
+    const colDiv = document.createElement('div');
+    colDiv.className = 'column';
+    colDiv.dataset.col = c;
+
+    // Placeholder
+    const ph = document.createElement('div');
+    ph.className = 'col-placeholder';
+    colDiv.appendChild(ph);
+
+    const cards = columns[c];
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      const cardEl = document.createElement('div');
+      cardEl.className = `card ${card.color} ${card.faceUp ? 'face-up' : 'face-down'}`;
+      cardEl.dataset.col = c;
+      cardEl.dataset.idx = i;
+
+      // Offset
+      let top = 0;
+      for (let j = 0; j < i; j++) {
+        top += columns[c][j].faceUp ? 22 : 12;
+      }
+      cardEl.style.top = top + 'px';
+
+      // Face content
+      const face = document.createElement('div');
+      face.className = 'card-face';
+      face.innerHTML = `
+        <span class="rank">${card.rank}</span>
+        <span class="suit-center">${card.suit}</span>
+        <span class="rank-bottom">${card.rank}</span>
+      `;
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      cardEl.appendChild(face);
+      cardEl.appendChild(back);
+
+      // Selection highlight
+      if (selectedCol === c && i >= selectedIdx) {
+        cardEl.classList.add('selected');
+      }
+
+      cardEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onCardClick(c, i);
+      });
+
+      colDiv.appendChild(cardEl);
+    }
+
+    // Click on empty area of column
+    colDiv.addEventListener('click', (e) => {
+      if (e.target === colDiv || e.target.classList.contains('col-placeholder')) {
+        onColumnClick(c);
+      }
+    });
+
+    board.appendChild(colDiv);
+  }
+
+  // Stock
+  const stockPile = document.getElementById('stock-pile');
+  if (stock.length > 0) {
+    stockPile.textContent = stock.length;
+    stockPile.classList.remove('empty');
+  } else {
+    stockPile.textContent = '';
+    stockPile.classList.add('empty');
+  }
+
+  // Foundations
+  const foundDiv = document.getElementById('foundations');
+  foundDiv.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'foundation-slot' + (i < foundations.length ? ' filled' : '');
+    slot.textContent = i < foundations.length ? '♠' : '';
+    if (i < foundations.length && foundations[i].suit === '♥') slot.textContent = '♥';
+    foundDiv.appendChild(slot);
+  }
+
+  // Stats
+  document.getElementById('move-count').textContent = moves;
+  document.getElementById('score').textContent = Math.max(0, score);
+  document.getElementById('deals-left').textContent = stock.length / 10;
+}
+
+function canPickUp(col, idx) {
+  if (idx < 0 || idx >= columns[col].length) return false;
+  if (!columns[col][idx].faceUp) return false;
+  // Check descending sequence from idx to top
+  for (let i = idx; i < columns[col].length - 1; i++) {
+    const a = columns[col][i];
+    const b = columns[col][i + 1];
+    if (!a.faceUp || !b.faceUp) return false;
+    if (a.value !== b.value + 1) return false;
+    if (a.suit !== b.suit) return false;
+  }
+  return true;
+}
+
+function canPlace(movingCard, destCol) {
+  if (columns[destCol].length === 0) return true;
+  const top = columns[destCol][columns[destCol].length - 1];
+  return top.value === movingCard.value + 1;
+}
+
+function onCardClick(col, idx) {
+  if (gameOver) return;
+
+  // If something is already selected, try to place
+  if (selectedCol !== -1) {
+    if (selectedCol === col && selectedIdx === idx) {
+      // Deselect
+      selectedCol = -1;
+      selectedIdx = -1;
+      render();
+      return;
+    }
+    // Try to move to this column
+    tryMove(selectedCol, selectedIdx, col);
+    return;
+  }
+
+  // Nothing selected – try to pick up
+  if (canPickUp(col, idx)) {
+    selectedCol = col;
+    selectedIdx = idx;
+    render();
+  } else {
+    // Flash the card
+    const cards = document.querySelectorAll(`.card[data-col="${col}"]`);
+    if (cards[idx]) {
+      cards[idx].classList.add('invalid-shake');
+      setTimeout(() => cards[idx].classList.remove('invalid-shake'), 300);
+    }
+  }
+}
+
+function onColumnClick(col) {
+  if (gameOver) return;
+  if (selectedCol !== -1) {
+    tryMove(selectedCol, selectedIdx, col);
+  }
+}
+
+function tryMove(fromCol, fromIdx, toCol) {
+  if (fromCol === toCol) {
+    selectedCol = -1;
+    selectedIdx = -1;
+    render();
+    return;
+  }
+
+  const moving = columns[fromCol][fromIdx];
+  if (!canPlace(moving, toCol)) {
+    showMsg("Can't place there");
+    return;
+  }
+
+  saveState();
+
+  // Move cards
+  const group = columns[fromCol].splice(fromIdx);
+  columns[toCol].push(...group);
+
+  // Turn face-down top of source face-up
+  if (columns[fromCol].length > 0) {
+    const newTop = columns[fromCol][columns[fromCol].length - 1];
+    if (!newTop.faceUp) newTop.faceUp = true;
+  }
+
+  moves++;
+  score += 10;
+
+  selectedCol = -1;
+  selectedIdx = -1;
+
+  // Check for completed sequences
+  checkComplete(toCol);
+
+  render();
+  checkWin();
+}
+
+function checkComplete(col) {
+  const c = columns[col];
+  if (c.length < 13) return;
+
+  // Check top 13 for complete same-suit descending K→A
+  const start = c.length - 13;
+  const suit = c[c.length - 1].suit;
+  for (let i = 0; i < 13; i++) {
+    const card = c[start + i];
+    if (!card.faceUp) return;
+    if (card.suit !== suit) return;
+    if (card.value !== 13 - i) return;
+  }
+
+  // Remove the 13 cards
+  const removed = c.splice(start, 13);
+  foundations.push(removed[0]); // store the top (K) as identifier
+  score += 100;
+
+  // Turn new top face-up
+  if (c.length > 0 && !c[c.length - 1].faceUp) {
+    c[c.length - 1].faceUp = true;
+  }
+
+  showMsg("Sequence complete! +100");
+}
+
+function dealFromStock() {
+  if (gameOver) return;
+  if (stock.length === 0) {
+    showMsg("No more deals");
+    return;
+  }
+
+  // Can't deal if any column is empty
+  for (let i = 0; i < 10; i++) {
+    if (columns[i].length === 0) {
+      showMsg("Fill all empty columns before dealing");
+      return;
+    }
+  }
+
+  saveState();
+
+  // Deal one card to each column
+  for (let i = 0; i < 10 && stock.length > 0; i++) {
+    const card = stock.pop();
+    card.faceUp = true;
+    columns[i].push(card);
+  }
+
+  dealsLeft = stock.length / 10;
+  score -= 100;
+  moves++;
+
+  selectedCol = -1;
+  selectedIdx = -1;
+
+  // Check all columns for complete sequences
+  for (let i = 0; i < 10; i++) {
+    checkComplete(i);
+  }
+
+  render();
+  checkWin();
+}
+
+function undo() {
+  if (undoStack.length === 0) {
+    showMsg("Nothing to undo");
+    return;
+  }
+  const state = undoStack.pop();
+  columns = state.columns;
+  stock = state.stock;
+  foundations = state.foundations;
+  score = state.score;
+  moves = state.moves;
+  dealsLeft = state.dealsLeft;
+  selectedCol = -1;
+  selectedIdx = -1;
+  gameOver = false;
+  removeOverlay();
+  render();
+}
+
+function checkWin() {
+  if (foundations.length >= 8) {
+    gameOver = true;
+    setTimeout(() => {
+      showOverlay("🎉 You Win! 🎉", `Completed in ${moves} moves with a score of ${Math.max(0, score)}`);
+    }, 600);
+  }
+}
+
+function showOverlay(title, subtitle) {
+  removeOverlay();
+  const ov = document.createElement('div');
+  ov.className = 'game-over-overlay';
+  ov.id = 'overlay';
+  ov.innerHTML = `<div class="game-over-box">
+    <h2>${title}</h2>
+    <p>${subtitle}</p>
+    <button class="btn" onclick="newGame()">Play Again</button>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function removeOverlay() {
+  const ov = document.getElementById('overlay');
+  if (ov) ov.remove();
+}
+
+let msgTimer;
+function showMsg(text) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+// Click on empty background to deselect
+document.body.addEventListener('click', (e) => {
+  if (e.target === document.body || e.target.id === 'board') {
+    if (selectedCol !== -1) {
+      selectedCol = -1;
+      selectedIdx = -1;
+      render();
+    }
+  }
+});
+
+// Keyboard: 'n' for new game, 'u' for undo
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'n' || e.key === 'N') newGame();
+  if (e.key === 'u' || e.key === 'U') undo();
+});
+
+// Start
+newGame();
+</script>
+</body>
+</html>
